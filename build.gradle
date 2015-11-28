@@ -1,0 +1,31 @@
+apply plugin: 'groovy'
+
+repositories {
+  jcenter()
+  maven { url 'https://maven.atlassian.com/repository/public' }
+}
+
+dependencies {
+  compile 'org.codehaus.groovy:groovy-all:2.4.5'
+  compile 'org.slf4j:slf4j-simple:1.7.12'
+
+  compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
+  compile 'com.squareup.retrofit:converter-jackson:2.0.0-beta2'
+
+  compile 'com.fasterxml.jackson.core:jackson-core:2.6.3'
+  compile 'com.fasterxml.jackson.core:jackson-databind:2.6.3'
+  compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.6.3'
+
+  compile 'com.atlassian.jira:jira-rest-java-client-api:3.0.0'
+  compile 'com.atlassian.jira:jira-rest-java-client-core:3.0.0'
+
+  testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+  testCompile 'junit:junit:4.12'
+}
+
+apply plugin:'application'
+mainClassName = 'com.netflix.spinnaker.jira.Triage'
+
+run {
+  standardInput = System.in
+}
