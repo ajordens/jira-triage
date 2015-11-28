@@ -18,25 +18,32 @@ class Triage {
     def client = buildJiraRestClient(config)
 
     fetchIssues(config, client).each { Issue issue ->
-      println ""
-      println "---------------------------------------------------------------------------------------------------------"
-      println ""
-      println "Created:     Reporter:"
-      println "${issue.creationDate.toDate().format("yyyy-MM-dd")}   ${issue.reporter.displayName} (${issue.reporter.emailAddress})"
-      println ""
-      println "Key:         Status:         Summary:"
-      println "${issue.key.padRight(9)}    ${issue.status.name.padRight(12)}    ${issue.summary}"
-      println ""
-      println "Description:"
-      println "${issue.description}"
+      def created = issue.creationDate.toDate().format("yyyy-MM-dd")
+      def reporter = "${issue.reporter.displayName} (${issue.reporter.emailAddress})"
+      def key = issue.key.padRight(13)
+      def status = issue.status.name.padRight(16)
+      def summary = issue.summary
+      def description = issue.description
 
-      println ""
-      println "F1, F2, F3 - Feature"
-      println "B1, B2, B3 - Bug"
-      println "NF         - Needs Followup"
-      println "S          - Skip"
-      println "---"
-      println "Decision?"
+      println """
+________________________________________________________________________________________________________________________
+
+Created:     Reporter:
+${created}   ${reporter}
+
+Key:         Status:         Summary:
+${[key, status, summary].join("")}
+
+Description:
+${description}
+
+F1, F2, F3 - Feature
+B1, B2, B3 - Bug
+NF         - Needs Followup
+S          - Skip
+---
+Decision?
+"""
 
       def issueContext = [
           labels: issue.labels,
