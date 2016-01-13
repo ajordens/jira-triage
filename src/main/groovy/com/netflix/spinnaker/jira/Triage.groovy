@@ -17,7 +17,18 @@ class Triage {
     def config = loadConfig(new File(System.getProperty("user.home") + "/.jira.d/", "config.yml"))
     def client = buildJiraRestClient(config)
 
+    def lowerId = 0
+    def upperId = 0
+
     fetchIssues(config, client).each { Issue issue ->
+      def keyId = issue.key.split("-")[1] as Long
+      if (lowerId && upperId && (keyId < lowerId || keyId > upperId)) {
+        return
+      }
+      if (issue.labels.find { it.startsWith("det-") || ["needs-feedback", "det-needs-verification"].contains(it)}) {
+        return
+      }
+
       def created = issue.creationDate.toDate().format("yyyy-MM-dd")
       def reporter = "${issue.reporter.displayName} (${issue.reporter.emailAddress})"
       def key = issue.key.padRight(13)
@@ -39,7 +50,8 @@ ${description}
 
 F1, F2, F3 - Feature
 B1, B2, B3 - Bug
-NF         - Needs Followup
+NV         - Needs Verification
+NF         - Needs Feedback
 S          - Skip
 ---
 Decision?
@@ -84,7 +96,8 @@ Decision?
     def query = """
 project = ${triageConfig.project} AND
 resolution = Unresolved AND
-(labels not in (${triageConfig.tagPrefix}-triaged) OR labels is EMPTY)
+(labels not in (${triageConfig.tagPrefix}-triaged, needs-feedback, ${triageConfig.tagPrefix}-needs-verification) OR labels is EMPTY)
+ORDER BY key ASC
 """.toString()
 
     def allIssues = []
@@ -131,9 +144,11 @@ resolution = Unresolved AND
       issueContext.labels << "${triageConfig.tagPrefix}-bug"
       issueContext.priority = 4
     }),
-    NF("Needs Followup", { TriageConfig triageConfig, Map issueContext ->
-      issueContext.labels << "${triageConfig.tagPrefix}-triaged"
-      issueContext.labels << "${triageConfig.tagPrefix}-needs-followup"
+    NV("Will not fix", { TriageConfig triageConfig, Map issueContext ->
+      issueContext.labels << "${triageConfig.tagPrefix}-needs-verification"
+    }),
+    NF("Needs Feedback", { TriageConfig triageConfig, Map issueContext ->
+      issueContext.labels << "needs-feedback"
     }),
     S("Skip", { TriageConfig triageConfig, Map issueContext ->
       // do nothing
